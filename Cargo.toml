@@ -1,0 +1,11 @@
+[package]
+name = "rusty_lcurve"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rusqlite = { version = "0.32.0", features = ["bundled"] }
+ratatui = "0.28.1"
+tui-input = "0.10.1"
+uuid = "1.2"
+chrono = "0.4"
