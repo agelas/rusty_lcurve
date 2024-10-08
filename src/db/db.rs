@@ -1,5 +1,6 @@
 use crate::db::models::LCProblem;
 use rusqlite::{Connection, Result};
+use std::fs;
 
 pub fn init_db(db_path: &str) -> Result<()> {
     if !fs::metadata(db_path).is_ok() {
