@@ -6,7 +6,7 @@ use ratatui::{
     crossterm::{
         event::{self, Event, KeyCode, KeyEventKind},
         execute,
-        terminal::enable_raw_mode,
+        terminal::{disable_raw_mode, enable_raw_mode},
     },
     prelude::Backend,
     Terminal,
@@ -42,6 +42,9 @@ impl<'a> App<'a> {
         let mut app = App::new("Rusty LCurve");
         let app_result = app.run_app(&mut terminal, Duration::from_millis(250));
 
+        disable_raw_mode()?;
+        terminal.show_cursor()?;
+
         if let Err(err) = app_result {
             println!("{err:?}");
         }
@@ -58,7 +61,7 @@ impl<'a> App<'a> {
     ) -> io::Result<()> {
         let last_tick = Instant::now();
         loop {
-            terminal.draw(|frame| ui::draw(frame, &mut self))?;
+            terminal.draw(|frame| ui::draw(frame, self))?;
             let timeout = tick_rate.saturating_sub(last_tick.elapsed());
             if event::poll(timeout)? {
                 if let Event::Key(key) = event::read()? {
@@ -66,6 +69,7 @@ impl<'a> App<'a> {
                         match key.code {
                             KeyCode::Left | KeyCode::Char('h') => self.on_left(),
                             KeyCode::Right | KeyCode::Char('l') => self.on_right(),
+                            KeyCode::Char('q') => self.should_quit = true,
                             _ => {}
                         }
                     }
