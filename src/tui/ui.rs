@@ -33,13 +33,12 @@ fn draw_first_tab(frame: &mut Frame, app: &mut App, area: Rect) {
     draw_lists(frame, app, chunks[1]);
 }
 
-fn draw_inputs(frame: &mut Frame, app: &mut App, area: Rect) {
+fn draw_inputs(frame: &mut Frame, _app: &mut App, area: Rect) {
     let chunks = Layout::horizontal([
-        Constraint::Percentage(10),
+        Constraint::Percentage(20),
         Constraint::Percentage(50),
-        Constraint::Percentage(40),
+        Constraint::Percentage(30),
     ])
-    .margin(1)
     .split(area);
 
     let number_block = Block::bordered().title("LC Number");
@@ -51,7 +50,7 @@ fn draw_inputs(frame: &mut Frame, app: &mut App, area: Rect) {
     frame.render_widget(type_block, chunks[2]);
 }
 
-fn draw_lists(frame: &mut Frame, app: &mut App, area: Rect) {
+fn draw_lists(frame: &mut Frame, _app: &mut App, area: Rect) {
     let chunks =
         Layout::horizontal([Constraint::Percentage(30), Constraint::Percentage(70)]).split(area);
 
@@ -62,7 +61,7 @@ fn draw_lists(frame: &mut Frame, app: &mut App, area: Rect) {
     frame.render_widget(placeholder_2, chunks[1]);
 }
 
-fn draw_second_tab(frame: &mut Frame, app: &mut App, area: Rect) {
+fn draw_second_tab(frame: &mut Frame, _app: &mut App, area: Rect) {
     let chunks = Layout::vertical([Constraint::Length(15)]).split(area);
     let placeholder = Paragraph::new("Placeholder for second tab");
     frame.render_widget(placeholder, chunks[0]);
