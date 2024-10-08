@@ -1,6 +1,6 @@
-use crate::tui::tui::App;
+use crate::tui::tui::{App, AppView, OverviewEditor};
 use ratatui::{
-    layout::{Constraint, Layout, Rect},
+    layout::{Constraint, Layout, Position, Rect},
     style::{Color, Style},
     text::{self, Span},
     widgets::{Block, Paragraph, Tabs},
@@ -33,7 +33,7 @@ fn draw_first_tab(frame: &mut Frame, app: &mut App, area: Rect) {
     draw_lists(frame, app, chunks[1]);
 }
 
-fn draw_inputs(frame: &mut Frame, _app: &mut App, area: Rect) {
+fn draw_inputs(frame: &mut Frame, app: &mut App, area: Rect) {
     let chunks = Layout::horizontal([
         Constraint::Percentage(20),
         Constraint::Percentage(50),
@@ -41,13 +41,56 @@ fn draw_inputs(frame: &mut Frame, _app: &mut App, area: Rect) {
     ])
     .split(area);
 
-    let number_block = Block::bordered().title("LC Number");
-    let name_block = Block::bordered().title("LC Name");
-    let type_block = Block::bordered().title("Type");
+    let lc_number_paragraph = Paragraph::new(app.lc_number.value())
+        .block(Block::bordered().title("LC Number"))
+        .style(if matches!(app.app_mode.editor, OverviewEditor::Number) {
+            Style::default().fg(Color::Yellow)
+        } else {
+            Style::default()
+        });
 
-    frame.render_widget(number_block, chunks[0]);
-    frame.render_widget(name_block, chunks[1]);
-    frame.render_widget(type_block, chunks[2]);
+    let lc_name_paragraph = Paragraph::new(app.lc_name.value())
+        .block(Block::bordered().title("LC Name"))
+        .style(if matches!(app.app_mode.editor, OverviewEditor::Name) {
+            Style::default().fg(Color::Yellow)
+        } else {
+            Style::default()
+        });
+
+    let lc_type_paragraph = Paragraph::new(app.lc_type.value())
+        .block(Block::bordered().title("Type"))
+        .style(if matches!(app.app_mode.editor, OverviewEditor::Type) {
+            Style::default().fg(Color::Yellow)
+        } else {
+            Style::default()
+        });
+
+    frame.render_widget(lc_number_paragraph, chunks[0]);
+    frame.render_widget(lc_name_paragraph, chunks[1]);
+    frame.render_widget(lc_type_paragraph, chunks[2]);
+
+    if app.app_mode.view == AppView::Editor {
+        match app.app_mode.editor {
+            OverviewEditor::Number => {
+                frame.set_cursor_position(Position::new(
+                    chunks[0].x + app.lc_number.visual_cursor() as u16 + 1,
+                    chunks[0].y + 1,
+                ));
+            }
+            OverviewEditor::Name => {
+                frame.set_cursor_position(Position::new(
+                    chunks[1].x + app.lc_name.visual_cursor() as u16 + 1,
+                    chunks[1].y + 1,
+                ));
+            }
+            OverviewEditor::Type => {
+                frame.set_cursor_position(Position::new(
+                    chunks[2].x + app.lc_type.visual_cursor() as u16 + 1,
+                    chunks[2].y + 1,
+                ));
+            }
+        }
+    }
 }
 
 fn draw_lists(frame: &mut Frame, _app: &mut App, area: Rect) {
