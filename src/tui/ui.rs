@@ -1,9 +1,9 @@
 use crate::tui::tui::{App, AppView, OverviewEditor};
 use ratatui::{
     layout::{Constraint, Layout, Position, Rect},
-    style::{Color, Style},
+    style::{Color, Modifier, Style},
     text::{self, Span},
-    widgets::{Block, Paragraph, Tabs},
+    widgets::{Block, List, ListItem, Paragraph, Tabs},
     Frame,
 };
 
@@ -59,17 +59,20 @@ fn draw_inputs(frame: &mut Frame, app: &mut App, area: Rect) {
             Style::default()
         });
 
-    let lc_type_paragraph = Paragraph::new(app.lc_type.value())
-        .block(Block::bordered().title("Type"))
-        .style(if matches!(app.app_settings.editor, OverviewEditor::Type) {
-            Style::default().fg(Color::Yellow)
-        } else {
-            Style::default()
-        });
+    let lc_categories: Vec<ListItem> = app
+        .categories
+        .items
+        .iter()
+        .map(|i| ListItem::new(vec![text::Line::from(Span::raw(*i))]))
+        .collect();
+    let lc_type_list = List::new(lc_categories)
+        .block(Block::bordered().title("Categories"))
+        .highlight_style(Style::default().add_modifier(Modifier::BOLD))
+        .highlight_symbol(">");
 
     frame.render_widget(lc_number_paragraph, chunks[0]);
     frame.render_widget(lc_name_paragraph, chunks[1]);
-    frame.render_widget(lc_type_paragraph, chunks[2]);
+    frame.render_stateful_widget(lc_type_list, chunks[2], &mut app.categories.state);
 
     if app.app_settings.view == AppView::Editor {
         match app.app_settings.editor {
@@ -85,12 +88,7 @@ fn draw_inputs(frame: &mut Frame, app: &mut App, area: Rect) {
                     chunks[1].y + 1,
                 ));
             }
-            OverviewEditor::Type => {
-                frame.set_cursor_position(Position::new(
-                    chunks[2].x + app.lc_type.visual_cursor() as u16 + 1,
-                    chunks[2].y + 1,
-                ));
-            }
+            _ => {}
         }
     }
 }
