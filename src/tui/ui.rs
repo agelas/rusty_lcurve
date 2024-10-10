@@ -43,15 +43,17 @@ fn draw_inputs(frame: &mut Frame, app: &mut App, area: Rect) {
 
     let lc_number_paragraph = Paragraph::new(app.lc_number.value())
         .block(Block::bordered().title("LC Number"))
-        .style(if matches!(app.app_mode.editor, OverviewEditor::Number) {
-            Style::default().fg(Color::Yellow)
-        } else {
-            Style::default()
-        });
+        .style(
+            if matches!(app.app_settings.editor, OverviewEditor::Number) {
+                Style::default().fg(Color::Yellow)
+            } else {
+                Style::default()
+            },
+        );
 
     let lc_name_paragraph = Paragraph::new(app.lc_name.value())
         .block(Block::bordered().title("LC Name"))
-        .style(if matches!(app.app_mode.editor, OverviewEditor::Name) {
+        .style(if matches!(app.app_settings.editor, OverviewEditor::Name) {
             Style::default().fg(Color::Yellow)
         } else {
             Style::default()
@@ -59,7 +61,7 @@ fn draw_inputs(frame: &mut Frame, app: &mut App, area: Rect) {
 
     let lc_type_paragraph = Paragraph::new(app.lc_type.value())
         .block(Block::bordered().title("Type"))
-        .style(if matches!(app.app_mode.editor, OverviewEditor::Type) {
+        .style(if matches!(app.app_settings.editor, OverviewEditor::Type) {
             Style::default().fg(Color::Yellow)
         } else {
             Style::default()
@@ -69,8 +71,8 @@ fn draw_inputs(frame: &mut Frame, app: &mut App, area: Rect) {
     frame.render_widget(lc_name_paragraph, chunks[1]);
     frame.render_widget(lc_type_paragraph, chunks[2]);
 
-    if app.app_mode.view == AppView::Editor {
-        match app.app_mode.editor {
+    if app.app_settings.view == AppView::Editor {
+        match app.app_settings.editor {
             OverviewEditor::Number => {
                 frame.set_cursor_position(Position::new(
                     chunks[0].x + app.lc_number.visual_cursor() as u16 + 1,
