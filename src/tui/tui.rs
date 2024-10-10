@@ -1,6 +1,8 @@
 use crate::db::db;
+use crate::tui::stateful_list::StatefulList;
 use crate::tui::tabs::TabsState;
 use crate::tui::ui;
+use crate::tui::validation::CATEGORIES;
 use ratatui::{
     backend::CrosstermBackend,
     crossterm::{
@@ -30,6 +32,7 @@ pub enum AppView {
     Editor,
 }
 
+#[derive(PartialEq)]
 pub enum OverviewEditor {
     Number,
     Name,
@@ -49,7 +52,7 @@ pub struct App<'a> {
     pub app_settings: AppSettings,
     pub lc_number: Input,
     pub lc_name: Input,
-    pub lc_type: Input,
+    pub categories: StatefulList<&'a str>,
 }
 
 impl<'a> App<'a> {
@@ -65,7 +68,7 @@ impl<'a> App<'a> {
             },
             lc_number: Input::default(),
             lc_name: Input::default(),
-            lc_type: Input::default(),
+            categories: StatefulList::with_items(CATEGORIES.to_vec()),
         }
     }
 
@@ -115,6 +118,8 @@ impl<'a> App<'a> {
                             match key.code {
                                 KeyCode::Left => self.switch_editor_left(),
                                 KeyCode::Right => self.switch_editor_right(),
+                                KeyCode::Up => self.on_up(),
+                                KeyCode::Down => self.on_down(),
                                 KeyCode::Esc => self.app_settings.mode = AppMode::Normal,
                                 KeyCode::Enter => {
                                     // need to validate all inputs before submitting and clearing all input fields.
@@ -151,6 +156,18 @@ impl<'a> App<'a> {
         }
     }
 
+    fn on_up(&mut self) {
+        if (self.app_settings.editor == OverviewEditor::Type) {
+            self.categories.previous();
+        }
+    }
+
+    fn on_down(&mut self) {
+        if (self.app_settings.editor == OverviewEditor::Type) {
+            self.categories.next();
+        }
+    }
+
     fn switch_editor_left(&mut self) {
         match self.app_settings.editor {
             OverviewEditor::Name => self.app_settings.editor = OverviewEditor::Number,
@@ -175,9 +192,7 @@ impl<'a> App<'a> {
             OverviewEditor::Name => {
                 self.lc_name.handle_event(&Event::Key(key));
             }
-            OverviewEditor::Type => {
-                self.lc_type.handle_event(&Event::Key(key));
-            }
+            _ => {}
         }
     }
 }
