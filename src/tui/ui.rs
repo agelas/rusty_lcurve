@@ -68,7 +68,12 @@ fn draw_inputs(frame: &mut Frame, app: &mut App, area: Rect) {
     let lc_type_list = List::new(lc_categories)
         .block(Block::bordered().title("Categories"))
         .highlight_style(Style::default().add_modifier(Modifier::BOLD))
-        .highlight_symbol(">");
+        .highlight_symbol(">")
+        .style(if matches!(app.app_settings.editor, OverviewEditor::Type) {
+            Style::default().fg(Color::Yellow)
+        } else {
+            Style::default()
+        });
 
     frame.render_widget(lc_number_paragraph, chunks[0]);
     frame.render_widget(lc_name_paragraph, chunks[1]);
