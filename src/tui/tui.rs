@@ -113,11 +113,8 @@ impl<'a> App<'a> {
                             }
                         } else if self.app_settings.mode == AppMode::Input {
                             match key.code {
-                                KeyCode::Char('1') | KeyCode::Char('2') | KeyCode::Char('3') => {
-                                    if let KeyCode::Char(c) = key.code {
-                                        self.on_key(c);
-                                    }
-                                }
+                                KeyCode::Left => self.switch_editor_left(),
+                                KeyCode::Right => self.switch_editor_right(),
                                 KeyCode::Esc => self.app_settings.mode = AppMode::Normal,
                                 KeyCode::Enter => {
                                     // need to validate all inputs before submitting and clearing all input fields.
@@ -154,20 +151,19 @@ impl<'a> App<'a> {
         }
     }
 
-    fn on_key(&mut self, c: char) {
-        if self.app_settings.mode == AppMode::Input {
-            match c {
-                '1' => {
-                    self.app_settings.editor = OverviewEditor::Number;
-                }
-                '2' => {
-                    self.app_settings.editor = OverviewEditor::Name;
-                }
-                '3' => {
-                    self.app_settings.editor = OverviewEditor::Type;
-                }
-                _ => {}
-            }
+    fn switch_editor_left(&mut self) {
+        match self.app_settings.editor {
+            OverviewEditor::Name => self.app_settings.editor = OverviewEditor::Number,
+            OverviewEditor::Type => self.app_settings.editor = OverviewEditor::Name,
+            _ => {}
+        }
+    }
+
+    fn switch_editor_right(&mut self) {
+        match self.app_settings.editor {
+            OverviewEditor::Number => self.app_settings.editor = OverviewEditor::Name,
+            OverviewEditor::Name => self.app_settings.editor = OverviewEditor::Type,
+            _ => {}
         }
     }
 
