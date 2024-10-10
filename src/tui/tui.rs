@@ -19,6 +19,12 @@ use std::{
 use tui_input::{backend::crossterm::EventHandler, Input};
 
 #[derive(PartialEq)]
+pub enum AppMode {
+    Normal,
+    Input,
+}
+
+#[derive(PartialEq)]
 pub enum AppView {
     Overview,
     Editor,
@@ -30,7 +36,8 @@ pub enum OverviewEditor {
     Type,
 }
 
-pub struct AppMode {
+pub struct AppSettings {
+    pub mode: AppMode,
     pub view: AppView,
     pub editor: OverviewEditor,
 }
@@ -39,7 +46,7 @@ pub struct App<'a> {
     pub title: &'a str,
     pub should_quit: bool,
     pub tabs: TabsState<'a>,
-    pub app_mode: AppMode,
+    pub app_settings: AppSettings,
     pub lc_number: Input,
     pub lc_name: Input,
     pub lc_type: Input,
@@ -51,7 +58,8 @@ impl<'a> App<'a> {
             title,
             should_quit: false,
             tabs: TabsState::new(vec!["Overview", "Editor"]),
-            app_mode: AppMode {
+            app_settings: AppSettings {
+                mode: AppMode::Normal,
                 view: AppView::Overview,
                 editor: OverviewEditor::Number,
             },
@@ -95,20 +103,28 @@ impl<'a> App<'a> {
             if event::poll(timeout)? {
                 if let Event::Key(key) = event::read()? {
                     if key.kind == KeyEventKind::Press {
-                        match key.code {
-                            KeyCode::Char('1') | KeyCode::Char('2') | KeyCode::Char('3') => {
-                                if let KeyCode::Char(c) = key.code {
-                                    self.on_key(c);
+                        if self.app_settings.mode == AppMode::Normal {
+                            match key.code {
+                                KeyCode::Left | KeyCode::Char('h') => self.on_left(),
+                                KeyCode::Right | KeyCode::Char('l') => self.on_right(),
+                                KeyCode::Char('e') => self.app_settings.mode = AppMode::Input,
+                                KeyCode::Char('q') => self.should_quit = true,
+                                _ => {}
+                            }
+                        } else if self.app_settings.mode == AppMode::Input {
+                            match key.code {
+                                KeyCode::Char('1') | KeyCode::Char('2') | KeyCode::Char('3') => {
+                                    if let KeyCode::Char(c) = key.code {
+                                        self.on_key(c);
+                                    }
                                 }
-                            }
-                            KeyCode::Enter => {
-                                // need to validate all inputs before submitting and clearing all input fields.
-                            }
-                            KeyCode::Left | KeyCode::Char('h') => self.on_left(),
-                            KeyCode::Right | KeyCode::Char('l') => self.on_right(),
-                            KeyCode::Char('q') => self.should_quit = true,
-                            _ => {
-                                self.handle_input(key);
+                                KeyCode::Esc => self.app_settings.mode = AppMode::Normal,
+                                KeyCode::Enter => {
+                                    // need to validate all inputs before submitting and clearing all input fields.
+                                }
+                                _ => {
+                                    self.handle_input(key);
+                                }
                             }
                         }
                     }
@@ -123,46 +139,45 @@ impl<'a> App<'a> {
     fn on_left(&mut self) {
         self.tabs.previous();
         if self.tabs.index == 0 {
-            self.app_mode.view = AppView::Overview;
+            self.app_settings.view = AppView::Overview;
         } else {
-            self.app_mode.view = AppView::Editor;
+            self.app_settings.view = AppView::Editor;
         }
     }
 
     fn on_right(&mut self) {
         self.tabs.next();
         if self.tabs.index == 0 {
-            self.app_mode.view = AppView::Overview;
+            self.app_settings.view = AppView::Overview;
         } else {
-            self.app_mode.view = AppView::Editor;
+            self.app_settings.view = AppView::Editor;
         }
     }
 
     fn on_key(&mut self, c: char) {
-        match c {
-            'q' => {
-                self.should_quit = true;
+        if self.app_settings.mode == AppMode::Input {
+            match c {
+                '1' => {
+                    self.app_settings.editor = OverviewEditor::Number;
+                }
+                '2' => {
+                    self.app_settings.editor = OverviewEditor::Name;
+                }
+                '3' => {
+                    self.app_settings.editor = OverviewEditor::Type;
+                }
+                _ => {}
             }
-            '1' => {
-                self.app_mode.editor = OverviewEditor::Number;
-            }
-            '2' => {
-                self.app_mode.editor = OverviewEditor::Name;
-            }
-            '3' => {
-                self.app_mode.editor = OverviewEditor::Type;
-            }
-            _ => {}
         }
     }
 
     fn handle_input(&mut self, key: KeyEvent) {
-        match self.app_mode.editor {
+        match self.app_settings.editor {
             OverviewEditor::Number => {
                 self.lc_number.handle_event(&Event::Key(key));
             }
             OverviewEditor::Name => {
-                self.lc_number.handle_event(&Event::Key(key));
+                self.lc_name.handle_event(&Event::Key(key));
             }
             OverviewEditor::Type => {
                 self.lc_type.handle_event(&Event::Key(key));
