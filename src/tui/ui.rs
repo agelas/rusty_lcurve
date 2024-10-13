@@ -1,9 +1,9 @@
 use crate::tui::tui::{App, AppView, OverviewEditor};
 use ratatui::{
-    layout::{Constraint, Layout, Position, Rect},
-    style::{Color, Modifier, Style},
+    layout::{Constraint, Flex, Layout, Position, Rect},
+    style::{Color, Modifier, Style, Stylize},
     text::{self, Span},
-    widgets::{Block, List, ListItem, Paragraph, Tabs},
+    widgets::{Block, Clear, List, ListItem, Paragraph, Tabs, Wrap},
     Frame,
 };
 
@@ -24,6 +24,9 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
         1 => draw_second_tab(frame, app, chunks[1]),
         _ => {}
     };
+    if app.show_error_popup {
+        draw_error_popup(frame, app, chunks[1]);
+    }
 }
 
 fn draw_first_tab(frame: &mut Frame, app: &mut App, area: Rect) {
@@ -113,4 +116,21 @@ fn draw_second_tab(frame: &mut Frame, _app: &mut App, area: Rect) {
     let chunks = Layout::vertical([Constraint::Length(15)]).split(area);
     let placeholder = Paragraph::new("Placeholder for second tab");
     frame.render_widget(placeholder, chunks[0]);
+}
+
+fn draw_error_popup(frame: &mut Frame, app: &mut App, area: Rect) {
+    if app.show_error_popup {
+        let block = Block::bordered().title("Error").on_yellow();
+        let area = popup_area(area, 60, 20);
+        frame.render_widget(Clear, area);
+        frame.render_widget(block, area);
+    }
+}
+
+fn popup_area(area: Rect, percent_x: u16, percent_y: u16) -> Rect {
+    let vertical = Layout::vertical([Constraint::Percentage(percent_y)]).flex(Flex::Center);
+    let horizontal = Layout::horizontal([Constraint::Percentage(percent_x)]).flex(Flex::Center);
+    let [area] = vertical.areas(area);
+    let [area] = horizontal.areas(area);
+    area
 }
