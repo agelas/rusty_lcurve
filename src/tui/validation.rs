@@ -1,3 +1,5 @@
+use tui_input::Input;
+
 pub const CATEGORIES: [&str; 18] = [
     "Arrays & Hasing",
     "Two Pointers",
@@ -19,8 +21,8 @@ pub const CATEGORIES: [&str; 18] = [
     "Bit Manipulation",
 ];
 
-pub fn number_validator(num: &str) -> bool {
-    num.trim().parse::<i8>().is_ok()
+pub fn number_validator(num: &Input) -> bool {
+    num.value().trim().parse::<i8>().is_ok()
 }
 
 pub fn type_validator(entered_type: &str) -> bool {
