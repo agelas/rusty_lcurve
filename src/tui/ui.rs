@@ -1,8 +1,8 @@
 use crate::tui::tui::{App, AppView, OverviewEditor};
 use ratatui::{
-    layout::{Constraint, Flex, Layout, Position, Rect},
+    layout::{Constraint, Direction, Flex, Layout, Position, Rect},
     style::{Color, Modifier, Style, Stylize},
-    text::{self, Span},
+    text::{self, Span, Text},
     widgets::{Block, Clear, List, ListItem, Paragraph, Tabs, Wrap},
     Frame,
 };
@@ -25,7 +25,7 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
         _ => {}
     };
     if app.show_error_popup {
-        draw_error_popup(frame, app, chunks[1]);
+        draw_error_popup(frame, chunks[1]);
     }
 }
 
@@ -118,13 +118,24 @@ fn draw_second_tab(frame: &mut Frame, _app: &mut App, area: Rect) {
     frame.render_widget(placeholder, chunks[0]);
 }
 
-fn draw_error_popup(frame: &mut Frame, app: &mut App, area: Rect) {
-    if app.show_error_popup {
-        let block = Block::bordered().title("Error").on_yellow();
-        let area = popup_area(area, 60, 20);
-        frame.render_widget(Clear, area);
-        frame.render_widget(block, area);
-    }
+fn draw_error_popup(frame: &mut Frame, area: Rect) {
+    let popup_area = popup_area(area, 60, 40);
+
+    let block = Block::bordered().title("Error").on_yellow();
+
+    let text = Text::from(
+        "1. Check your number input is numeric \n
+        2. Make sure you selected an input category \n
+        Press Enter to close the popup.",
+    );
+
+    let paragraph = Paragraph::new(text)
+        .block(block)
+        .style(Style::default().fg(Color::DarkGray))
+        .wrap(Wrap { trim: true });
+
+    frame.render_widget(Clear, area);
+    frame.render_widget(paragraph, popup_area);
 }
 
 fn popup_area(area: Rect, percent_x: u16, percent_y: u16) -> Rect {
