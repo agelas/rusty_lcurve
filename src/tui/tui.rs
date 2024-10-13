@@ -1,8 +1,12 @@
-use crate::db::db;
-use crate::tui::stateful_list::StatefulList;
-use crate::tui::tabs::TabsState;
-use crate::tui::ui;
-use crate::tui::validation::CATEGORIES;
+use crate::{
+    db::db,
+    tui::{
+        stateful_list::StatefulList,
+        tabs::TabsState,
+        ui,
+        validation::{number_validator, CATEGORIES},
+    },
+};
 use ratatui::{
     backend::CrosstermBackend,
     crossterm::{
@@ -50,6 +54,7 @@ pub struct App<'a> {
     pub should_quit: bool,
     pub tabs: TabsState<'a>,
     pub app_settings: AppSettings,
+    pub show_error_popup: bool,
     pub lc_number: Input,
     pub lc_name: Input,
     pub categories: StatefulList<&'a str>,
@@ -66,6 +71,7 @@ impl<'a> App<'a> {
                 view: AppView::Overview,
                 editor: OverviewEditor::Number,
             },
+            show_error_popup: false,
             lc_number: Input::default(),
             lc_name: Input::default(),
             categories: StatefulList::with_items(CATEGORIES.to_vec()),
@@ -122,7 +128,7 @@ impl<'a> App<'a> {
                                 KeyCode::Down => self.on_down(),
                                 KeyCode::Esc => self.app_settings.mode = AppMode::Normal,
                                 KeyCode::Enter => {
-                                    // need to validate all inputs before submitting and clearing all input fields.
+                                    self.on_enter();
                                 }
                                 _ => {
                                     self.handle_input(key);
@@ -166,6 +172,11 @@ impl<'a> App<'a> {
         if (self.app_settings.editor == OverviewEditor::Type) {
             self.categories.next();
         }
+    }
+
+    fn on_enter(&mut self) {
+        self.show_error_popup = !self.show_error_popup;
+        // self.show_error_popup = !number_validator(&self.lc_number) || self.lc_name.value() != "";
     }
 
     fn switch_editor_left(&mut self) {
