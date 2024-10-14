@@ -24,6 +24,8 @@ use std::{
 };
 use tui_input::{backend::crossterm::EventHandler, Input};
 
+use super::validation::type_validator;
+
 #[derive(PartialEq)]
 pub enum AppMode {
     Normal,
@@ -128,7 +130,11 @@ impl<'a> App<'a> {
                                 KeyCode::Down => self.on_down(),
                                 KeyCode::Esc => self.app_settings.mode = AppMode::Normal,
                                 KeyCode::Enter => {
-                                    self.on_enter();
+                                    if self.show_error_popup {
+                                        self.show_error_popup = false;
+                                    } else {
+                                        self.on_enter();
+                                    }
                                 }
                                 _ => {
                                     self.handle_input(key);
@@ -175,8 +181,14 @@ impl<'a> App<'a> {
     }
 
     fn on_enter(&mut self) {
-        self.show_error_popup = !self.show_error_popup;
-        // self.show_error_popup = !number_validator(&self.lc_number) || self.lc_name.value() != "";
+        let number_valid = number_validator(&self.lc_number);
+        let name_valid = !self.lc_name.value().is_empty();
+        let category_valid = if let Some(selected_index) = self.categories.state.selected() {
+            type_validator(CATEGORIES[selected_index])
+        } else {
+            false
+        };
+        self.show_error_popup = !number_valid || !name_valid || !category_valid
     }
 
     fn switch_editor_left(&mut self) {
