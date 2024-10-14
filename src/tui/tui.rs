@@ -169,13 +169,13 @@ impl<'a> App<'a> {
     }
 
     fn on_up(&mut self) {
-        if (self.app_settings.editor == OverviewEditor::Type) {
+        if self.app_settings.editor == OverviewEditor::Type {
             self.categories.previous();
         }
     }
 
     fn on_down(&mut self) {
-        if (self.app_settings.editor == OverviewEditor::Type) {
+        if self.app_settings.editor == OverviewEditor::Type {
             self.categories.next();
         }
     }

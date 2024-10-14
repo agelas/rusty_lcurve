@@ -1,6 +1,6 @@
 use crate::tui::tui::{App, AppView, OverviewEditor};
 use ratatui::{
-    layout::{Constraint, Direction, Flex, Layout, Position, Rect},
+    layout::{Constraint, Flex, Layout, Position, Rect},
     style::{Color, Modifier, Style, Stylize},
     text::{self, Span, Text},
     widgets::{Block, Clear, List, ListItem, Paragraph, Tabs, Wrap},
