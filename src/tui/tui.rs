@@ -1,5 +1,5 @@
 use crate::{
-    db::db,
+    db::db::{insert_problem, problem_exists},
     tui::{
         stateful_list::StatefulList,
         tabs::TabsState,
@@ -17,6 +17,7 @@ use ratatui::{
     prelude::Backend,
     Terminal,
 };
+use rusqlite::Connection;
 use std::{
     error::Error,
     io,
@@ -60,10 +61,11 @@ pub struct App<'a> {
     pub lc_number: Input,
     pub lc_name: Input,
     pub categories: StatefulList<&'a str>,
+    pub db_connection: Connection,
 }
 
 impl<'a> App<'a> {
-    pub fn new(title: &'a str) -> Self {
+    pub fn new(title: &'a str, db_connection: Connection) -> Self {
         App {
             title,
             should_quit: false,
@@ -77,17 +79,18 @@ impl<'a> App<'a> {
             lc_number: Input::default(),
             lc_name: Input::default(),
             categories: StatefulList::with_items(CATEGORIES.to_vec()),
+            db_connection,
         }
     }
 
     // Remember to put db_path: &str as a param later
-    pub fn start_ui() -> Result<(), Box<dyn Error>> {
+    pub fn start_ui(db_connection: Connection) -> Result<(), Box<dyn Error>> {
         enable_raw_mode()?;
         let stdout = io::stdout();
         let backend = CrosstermBackend::new(stdout);
         let mut terminal = Terminal::new(backend)?;
 
-        let mut app = App::new("Rusty LCurve");
+        let mut app = App::new("Rusty LCurve", db_connection);
         let app_result = app.run_app(&mut terminal, Duration::from_millis(250));
 
         disable_raw_mode()?;
@@ -188,7 +191,36 @@ impl<'a> App<'a> {
         } else {
             false
         };
-        self.show_error_popup = !number_valid || !name_valid || !category_valid
+        self.show_error_popup = !number_valid || !name_valid || !category_valid;
+
+        let lc_number = self
+            .lc_number
+            .value()
+            .parse::<u32>()
+            .expect("Invalid LC number");
+        let problem_name = self.lc_name.value();
+        if !self.show_error_popup {
+            match problem_exists(&self.db_connection, lc_number, problem_name) {
+                Ok(true) => {
+                    self.show_error_popup = true; // this should be specific to like "problem exists" or something
+                }
+                Ok(false) => {
+                    let problem_type = CATEGORIES[self.categories.state.selected().unwrap()];
+                    if let Err(err) =
+                        insert_problem(&self.db_connection, lc_number, &problem_name, problem_type)
+                    {
+                        self.show_error_popup = true; // this is an error specific to insertion
+                    } else {
+                        self.lc_number.reset();
+                        self.lc_name.reset();
+                        self.categories.state.select(None);
+                    }
+                }
+                Err(err) => {
+                    self.show_error_popup = true; // make this specific to a failure of checking if problem exists
+                }
+            }
+        }
     }
 
     fn switch_editor_left(&mut self) {
