@@ -12,7 +12,7 @@ use ratatui::{
     crossterm::{
         event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
         execute,
-        terminal::{disable_raw_mode, enable_raw_mode},
+        terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     },
     prelude::Backend,
     Terminal,
@@ -86,7 +86,8 @@ impl<'a> App<'a> {
     // Remember to put db_path: &str as a param later
     pub fn start_ui(db_connection: Connection) -> Result<(), Box<dyn Error>> {
         enable_raw_mode()?;
-        let stdout = io::stdout();
+        let mut stdout = io::stdout();
+        execute!(stdout, EnterAlternateScreen);
         let backend = CrosstermBackend::new(stdout);
         let mut terminal = Terminal::new(backend)?;
 
@@ -94,6 +95,7 @@ impl<'a> App<'a> {
         let app_result = app.run_app(&mut terminal, Duration::from_millis(250));
 
         disable_raw_mode()?;
+        execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
         terminal.show_cursor()?;
 
         if let Err(err) = app_result {
