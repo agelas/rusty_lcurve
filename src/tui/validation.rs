@@ -22,7 +22,7 @@ pub const CATEGORIES: [&str; 18] = [
 ];
 
 pub fn number_validator(num: &Input) -> bool {
-    num.value().trim().parse::<i8>().is_ok()
+    num.value().trim().parse::<u32>().is_ok()
 }
 
 pub fn type_validator(entered_type: &str) -> bool {
