@@ -8,7 +8,7 @@ use crate::tui::tui::App;
 use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let db_path = "rusty_l_db";
+    let db_path = "rusty_l_db.db";
     if let Err(err) = init_db(db_path) {
         println!("Error initializing database: {:?}", err);
     }
