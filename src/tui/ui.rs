@@ -1,4 +1,7 @@
-use crate::tui::tui::{App, AppView, OverviewEditor};
+use crate::{
+    db::db::get_all_problems,
+    tui::tui::{App, AppView, OverviewEditor},
+};
 use ratatui::{
     layout::{Constraint, Flex, Layout, Position, Rect},
     style::{Color, Modifier, Style, Stylize},
@@ -101,15 +104,30 @@ fn draw_inputs(frame: &mut Frame, app: &mut App, area: Rect) {
     }
 }
 
-fn draw_lists(frame: &mut Frame, _app: &mut App, area: Rect) {
+fn draw_lists(frame: &mut Frame, app: &mut App, area: Rect) {
     let chunks =
         Layout::horizontal([Constraint::Percentage(30), Constraint::Percentage(70)]).split(area);
 
     let placeholder_1 = Block::bordered().title("Todays Problems");
-    let placeholder_2 = Block::bordered().title("All Problems");
+
+    let problems = match get_all_problems(&app.db_connection) {
+        Ok(problems) => problems,
+        Err(_) => vec![], // Handle errors by showing an empty list, is meh but will do for now
+    };
+    let problem_items: Vec<ListItem> = problems
+        .iter()
+        .map(|problem| {
+            let content = format!(
+                "{}: {} ({})",
+                problem.lc_number, problem.problem_name, problem.problem_type
+            );
+            ListItem::new(content)
+        })
+        .collect();
+    let problem_list = List::new(problem_items).block(Block::bordered().title("All Problems"));
 
     frame.render_widget(placeholder_1, chunks[0]);
-    frame.render_widget(placeholder_2, chunks[1]);
+    frame.render_widget(problem_list, chunks[1]);
 }
 
 fn draw_second_tab(frame: &mut Frame, _app: &mut App, area: Rect) {
