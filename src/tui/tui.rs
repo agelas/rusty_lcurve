@@ -83,11 +83,10 @@ impl<'a> App<'a> {
         }
     }
 
-    // Remember to put db_path: &str as a param later
     pub fn start_ui(db_connection: Connection) -> Result<(), Box<dyn Error>> {
         enable_raw_mode()?;
         let mut stdout = io::stdout();
-        execute!(stdout, EnterAlternateScreen);
+        execute!(stdout, EnterAlternateScreen).expect("Failed to execute EnterAlternateScreen");
         let backend = CrosstermBackend::new(stdout);
         let mut terminal = Terminal::new(backend)?;
 
