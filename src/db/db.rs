@@ -15,7 +15,7 @@ pub fn get_connection(db_path: &str) -> Result<Connection> {
 }
 
 pub fn get_all_problems(conn: &Connection) -> Result<Vec<LCProblem>> {
-    let mut query = conn.prepare("SELECT id, lc_number, problem_name, problem_type, start_date, last_practiced, times_practed FROM problems")?;
+    let mut query = conn.prepare("SELECT id, lc_number, problem_name, problem_type, start_date, last_practiced, times_practiced FROM problems")?;
     let problems = query
         .query_map([], |row| {
             Ok(LCProblem {
