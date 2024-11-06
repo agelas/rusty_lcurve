@@ -219,7 +219,7 @@ impl<'a> App<'a> {
                 }
                 Ok(false) => {
                     let problem_type = CATEGORIES[self.categories.state.selected().unwrap()];
-                    if let Err(err) =
+                    if let Err(_err) =
                         insert_problem(&self.db_connection, lc_number, &problem_name, problem_type)
                     {
                         self.show_error_popup = true;
@@ -230,7 +230,7 @@ impl<'a> App<'a> {
                         self.categories.state.select(None);
                     }
                 }
-                Err(err) => {
+                Err(_err) => {
                     self.show_error_popup = true;
                     self.error_reason = ErrorReason::CheckingProblemExists;
                 }
