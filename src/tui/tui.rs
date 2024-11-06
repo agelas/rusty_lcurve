@@ -46,6 +46,14 @@ pub enum OverviewEditor {
     Type,
 }
 
+#[derive(PartialEq)]
+pub enum ErrorReason {
+    NoError,
+    ProblemExists,
+    CheckingProblemExists,
+    InsertionError,
+}
+
 pub struct AppSettings {
     pub mode: AppMode,
     pub view: AppView,
@@ -58,6 +66,7 @@ pub struct App<'a> {
     pub tabs: TabsState<'a>,
     pub app_settings: AppSettings,
     pub show_error_popup: bool,
+    pub error_reason: ErrorReason,
     pub lc_number: Input,
     pub lc_name: Input,
     pub categories: StatefulList<&'a str>,
@@ -76,6 +85,7 @@ impl<'a> App<'a> {
                 editor: OverviewEditor::Number,
             },
             show_error_popup: false,
+            error_reason: ErrorReason::NoError,
             lc_number: Input::default(),
             lc_name: Input::default(),
             categories: StatefulList::with_items(CATEGORIES.to_vec()),
@@ -136,6 +146,7 @@ impl<'a> App<'a> {
                                 KeyCode::Enter => {
                                     if self.show_error_popup {
                                         self.show_error_popup = false;
+                                        self.error_reason = ErrorReason::NoError;
                                     } else {
                                         self.on_enter();
                                     }
@@ -203,14 +214,16 @@ impl<'a> App<'a> {
         if !self.show_error_popup {
             match problem_exists(&self.db_connection, lc_number, problem_name) {
                 Ok(true) => {
-                    self.show_error_popup = true; // this should be specific to like "problem exists" or something
+                    self.show_error_popup = true;
+                    self.error_reason = ErrorReason::ProblemExists;
                 }
                 Ok(false) => {
                     let problem_type = CATEGORIES[self.categories.state.selected().unwrap()];
                     if let Err(err) =
                         insert_problem(&self.db_connection, lc_number, &problem_name, problem_type)
                     {
-                        self.show_error_popup = true; // this is an error specific to insertion
+                        self.show_error_popup = true;
+                        self.error_reason = ErrorReason::InsertionError;
                     } else {
                         self.lc_number.reset();
                         self.lc_name.reset();
@@ -218,7 +231,8 @@ impl<'a> App<'a> {
                     }
                 }
                 Err(err) => {
-                    self.show_error_popup = true; // make this specific to a failure of checking if problem exists
+                    self.show_error_popup = true;
+                    self.error_reason = ErrorReason::CheckingProblemExists;
                 }
             }
         }

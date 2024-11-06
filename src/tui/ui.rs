@@ -1,6 +1,6 @@
 use crate::{
     db::db::get_all_problems,
-    tui::tui::{App, AppView, OverviewEditor},
+    tui::tui::{App, AppView, ErrorReason, OverviewEditor},
 };
 use ratatui::{
     layout::{Constraint, Flex, Layout, Position, Rect},
@@ -28,7 +28,7 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
         _ => {}
     };
     if app.show_error_popup {
-        draw_error_popup(frame, chunks[1]);
+        draw_error_popup(frame, &app.error_reason, chunks[1]);
     }
 }
 
@@ -136,16 +136,19 @@ fn draw_second_tab(frame: &mut Frame, _app: &mut App, area: Rect) {
     frame.render_widget(placeholder, chunks[0]);
 }
 
-fn draw_error_popup(frame: &mut Frame, area: Rect) {
+fn draw_error_popup(frame: &mut Frame, error_reason: &ErrorReason, area: Rect) {
     let popup_area = popup_area(area, 60, 40);
 
     let block = Block::bordered().title("Error").on_yellow();
 
-    let text = Text::from(
-        "1. Check your number input is numeric \n
-        2. Make sure you selected an input category \n
-        Press Enter to close the popup.",
-    );
+    let error_message = match error_reason {
+        ErrorReason::ProblemExists => "The problem already exists in the database. Please enter a unique problem.",
+        ErrorReason::CheckingProblemExists => "There was an error checking if the problem already exists. Please try again.",
+        ErrorReason::InsertionError => "1. Check your number input is numeric.\n2. Make sure you selected an input category.\nPress Enter to close the popup.",
+        ErrorReason::NoError => "",
+    };
+
+    let text = Text::from(error_message);
 
     let paragraph = Paragraph::new(text)
         .block(block)
