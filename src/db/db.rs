@@ -1,4 +1,8 @@
 use crate::db::models::LCProblem;
+use chrono::Utc;
+use rand::rngs::StdRng;
+use rand::seq::SliceRandom;
+use rand::{Rng, SeedableRng};
 use rusqlite::{params, Connection, Result};
 use std::fs;
 
@@ -66,12 +70,10 @@ pub fn insert_problem(
 pub fn select_random_problems(conn: &Connection, limit: usize) -> Result<Vec<LCProblem>> {
     let mut stmt = conn.prepare(
         "SELECT id, lc_number, problem_name, problem_type, start_date, last_practiced, times_practiced
-         FROM problems
-         ORDER BY RANDOM()
-         LIMIT ?1",
+         FROM problems",
     )?;
 
-    let problems_iter = stmt.query_map([limit as u32], |row| {
+    let problems_iter = stmt.query_map([], |row| {
         Ok(LCProblem {
             id: row.get(0)?,
             lc_number: row.get(1)?,
@@ -87,7 +89,14 @@ pub fn select_random_problems(conn: &Connection, limit: usize) -> Result<Vec<LCP
     for problem in problems_iter {
         problems.push(problem?);
     }
-    Ok(problems)
+
+    let now = Utc::now();
+    let seed = now.format("%Y-%m-%d").to_string();
+    let mut rng = StdRng::from_seed(seed.as_bytes()[..16].try_into().unwrap());
+
+    problems.shuffle(&mut rng);
+
+    Ok(problems.into_iter().take(limit).collect())
 }
 
 fn create_table(conn: &Connection) -> Result<()> {
