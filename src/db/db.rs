@@ -1,8 +1,5 @@
 use crate::db::models::LCProblem;
-use chrono::Utc;
-use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
 use rusqlite::{params, Connection, Result};
-use sha2::{Digest, Sha256};
 use std::fs;
 
 pub fn init_db(db_path: &str) -> Result<()> {
@@ -64,48 +61,6 @@ pub fn insert_problem(
         ]
     )?;
     Ok(())
-}
-
-pub fn select_random_problems(conn: &Connection, limit: usize) -> Result<Vec<LCProblem>> {
-    let mut stmt = conn.prepare(
-        "SELECT id, lc_number, problem_name, problem_type, start_date, last_practiced, times_practiced
-         FROM problems",
-    )?;
-
-    let problems_iter = stmt.query_map([], |row| {
-        Ok(LCProblem {
-            id: row.get(0)?,
-            lc_number: row.get(1)?,
-            problem_name: row.get(2)?,
-            problem_type: row.get(3)?,
-            start_date: row.get::<_, String>(4)?.parse().unwrap(),
-            last_practiced: row.get::<_, String>(5)?.parse().unwrap(),
-            times_practiced: row.get(6)?,
-        })
-    })?;
-
-    let mut problems = Vec::new();
-    for problem in problems_iter {
-        problems.push(problem?);
-    }
-
-    let now = Utc::now();
-    let seed_string = now.format("%Y-%m-%d").to_string();
-
-    let mut hasher = Sha256::new();
-    hasher.update(seed_string.as_bytes());
-    let seed_hash = hasher.finalize();
-
-    let seed: [u8; 32] = seed_hash
-        .as_slice()
-        .try_into()
-        .expect("Hash output size mismatch");
-
-    let mut rng = StdRng::from_seed(seed);
-
-    problems.shuffle(&mut rng);
-
-    Ok(problems.into_iter().take(limit).collect())
 }
 
 fn create_table(conn: &Connection) -> Result<()> {
