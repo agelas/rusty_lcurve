@@ -116,10 +116,11 @@ fn draw_lists(frame: &mut Frame, app: &mut App, area: Rect) {
     let todays_problem_items: Vec<ListItem> = todays_problems
         .iter()
         .map(|problem| {
-            let content = format!(
+            let mut content = format!(
                 "{}: {} ({})",
                 problem.lc_number, problem.problem_name, problem.problem_type
             );
+            content.truncate(20);
             ListItem::new(content)
         })
         .collect();
