@@ -1,5 +1,5 @@
 use crate::{
-    db::db::get_all_problems,
+    db::{db::get_all_problems, models::LCProblem},
     tui::tui::{App, AppView, ErrorReason, OverviewEditor},
     utils::get_todays_problems,
 };
@@ -7,7 +7,7 @@ use ratatui::{
     layout::{Constraint, Flex, Layout, Position, Rect},
     style::{Color, Modifier, Style, Stylize},
     text::{self, Span, Text},
-    widgets::{Block, Clear, List, ListItem, Paragraph, Tabs, Wrap},
+    widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Tabs, Wrap},
     Frame,
 };
 
@@ -113,39 +113,35 @@ fn draw_lists(frame: &mut Frame, app: &mut App, area: Rect) {
         Ok(todays_problems) => todays_problems,
         Err(_) => vec![],
     };
-    let todays_problem_items: Vec<ListItem> = todays_problems
+
+    let problems = match get_all_problems(&app.db_connection) {
+        Ok(problems) => problems,
+        Err(_) => vec![],
+    };
+
+    let todays_problems_list = create_problem_lists("Todays Problems", &todays_problems, true);
+    let problem_list = create_problem_lists("All Problems", &problems, false);
+
+    frame.render_widget(todays_problems_list, chunks[0]);
+    frame.render_widget(problem_list, chunks[1]);
+}
+
+fn create_problem_lists<'a>(title: &'a str, problems: &'a [LCProblem], truncate: bool) -> List<'a> {
+    let problem_items: Vec<ListItem> = problems
         .iter()
         .map(|problem| {
             let mut content = format!(
                 "{}: {} ({})",
                 problem.lc_number, problem.problem_name, problem.problem_type
             );
-            content.truncate(20);
+            if truncate {
+                content.truncate(20);
+            }
             ListItem::new(content)
         })
         .collect();
 
-    let problems = match get_all_problems(&app.db_connection) {
-        Ok(problems) => problems,
-        Err(_) => vec![],
-    };
-    let problem_items: Vec<ListItem> = problems
-        .iter()
-        .map(|problem| {
-            let content = format!(
-                "{}: {} ({})",
-                problem.lc_number, problem.problem_name, problem.problem_type
-            );
-            ListItem::new(content)
-        })
-        .collect();
-
-    let todays_problems_list =
-        List::new(todays_problem_items).block(Block::bordered().title("Todays Problems"));
-    let problem_list = List::new(problem_items).block(Block::bordered().title("All Problems"));
-
-    frame.render_widget(todays_problems_list, chunks[0]);
-    frame.render_widget(problem_list, chunks[1]);
+    List::new(problem_items).block(Block::default().borders(Borders::ALL).title(title))
 }
 
 fn draw_second_tab(frame: &mut Frame, _app: &mut App, area: Rect) {
