@@ -1,6 +1,7 @@
 use crate::{
     db::db::get_all_problems,
     tui::tui::{App, AppView, ErrorReason, OverviewEditor},
+    utils::get_todays_problems,
 };
 use ratatui::{
     layout::{Constraint, Flex, Layout, Position, Rect},
@@ -108,11 +109,24 @@ fn draw_lists(frame: &mut Frame, app: &mut App, area: Rect) {
     let chunks =
         Layout::horizontal([Constraint::Percentage(30), Constraint::Percentage(70)]).split(area);
 
-    let placeholder_1 = Block::bordered().title("Todays Problems");
+    let todays_problems = match get_todays_problems(&app.db_connection) {
+        Ok(todays_problems) => todays_problems,
+        Err(_) => vec![],
+    };
+    let todays_problem_items: Vec<ListItem> = todays_problems
+        .iter()
+        .map(|problem| {
+            let content = format!(
+                "{}: {} ({})",
+                problem.lc_number, problem.problem_name, problem.problem_type
+            );
+            ListItem::new(content)
+        })
+        .collect();
 
     let problems = match get_all_problems(&app.db_connection) {
         Ok(problems) => problems,
-        Err(_) => vec![], // Handle errors by showing an empty list, is meh but will do for now
+        Err(_) => vec![],
     };
     let problem_items: Vec<ListItem> = problems
         .iter()
@@ -124,9 +138,12 @@ fn draw_lists(frame: &mut Frame, app: &mut App, area: Rect) {
             ListItem::new(content)
         })
         .collect();
+
+    let todays_problems_list =
+        List::new(todays_problem_items).block(Block::bordered().title("Todays Problems"));
     let problem_list = List::new(problem_items).block(Block::bordered().title("All Problems"));
 
-    frame.render_widget(placeholder_1, chunks[0]);
+    frame.render_widget(todays_problems_list, chunks[0]);
     frame.render_widget(problem_list, chunks[1]);
 }
 
