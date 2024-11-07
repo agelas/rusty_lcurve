@@ -1,5 +1,4 @@
-use crate::db::db::select_random_problems;
-use crate::db::models::LCProblem;
+use crate::db::{db::select_random_problems, models::LCProblem};
 use chrono::{DateTime, Utc};
 use rusqlite::Connection;
 use std::{collections::HashSet, error::Error};

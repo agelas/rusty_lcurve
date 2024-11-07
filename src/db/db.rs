@@ -1,8 +1,6 @@
 use crate::db::models::LCProblem;
 use chrono::Utc;
-use rand::rngs::StdRng;
-use rand::seq::SliceRandom;
-use rand::{Rng, SeedableRng};
+use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
 use rusqlite::{params, Connection, Result};
 use sha2::{Digest, Sha256};
 use std::fs;
