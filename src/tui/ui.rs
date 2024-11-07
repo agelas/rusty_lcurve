@@ -109,13 +109,13 @@ fn draw_lists(frame: &mut Frame, app: &mut App, area: Rect) {
     let chunks =
         Layout::horizontal([Constraint::Percentage(30), Constraint::Percentage(70)]).split(area);
 
-    let todays_problems = match get_todays_problems(&app.db_connection) {
-        Ok(todays_problems) => todays_problems,
+    let problems = match get_all_problems(&app.db_connection) {
+        Ok(problems) => problems,
         Err(_) => vec![],
     };
 
-    let problems = match get_all_problems(&app.db_connection) {
-        Ok(problems) => problems,
+    let todays_problems = match get_todays_problems(&problems) {
+        Ok(todays_problems) => todays_problems,
         Err(_) => vec![],
     };
 
