@@ -63,6 +63,33 @@ pub fn insert_problem(
     Ok(())
 }
 
+pub fn select_random_problems(conn: &Connection, limit: usize) -> Result<Vec<LCProblem>> {
+    let mut stmt = conn.prepare(
+        "SELECT id, lc_number, problem_name, problem_type, start_date, last_practiced, times_practiced
+         FROM problems
+         ORDER BY RANDOM()
+         LIMIT ?1",
+    )?;
+
+    let problems_iter = stmt.query_map([limit as u32], |row| {
+        Ok(LCProblem {
+            id: row.get(0)?,
+            lc_number: row.get(1)?,
+            problem_name: row.get(2)?,
+            problem_type: row.get(3)?,
+            start_date: row.get::<_, String>(4)?.parse().unwrap(),
+            last_practiced: row.get::<_, String>(5)?.parse().unwrap(),
+            times_practiced: row.get(6)?,
+        })
+    })?;
+
+    let mut problems = Vec::new();
+    for problem in problems_iter {
+        problems.push(problem?);
+    }
+    Ok(problems)
+}
+
 fn create_table(conn: &Connection) -> Result<()> {
     conn.execute(
         "
