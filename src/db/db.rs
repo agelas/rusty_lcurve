@@ -4,6 +4,7 @@ use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
 use rand::{Rng, SeedableRng};
 use rusqlite::{params, Connection, Result};
+use sha2::{Digest, Sha256};
 use std::fs;
 
 pub fn init_db(db_path: &str) -> Result<()> {
@@ -91,8 +92,18 @@ pub fn select_random_problems(conn: &Connection, limit: usize) -> Result<Vec<LCP
     }
 
     let now = Utc::now();
-    let seed = now.format("%Y-%m-%d").to_string();
-    let mut rng = StdRng::from_seed(seed.as_bytes()[..16].try_into().unwrap());
+    let seed_string = now.format("%Y-%m-%d").to_string();
+
+    let mut hasher = Sha256::new();
+    hasher.update(seed_string.as_bytes());
+    let seed_hash = hasher.finalize();
+
+    let seed: [u8; 32] = seed_hash
+        .as_slice()
+        .try_into()
+        .expect("Hash output size mismatch");
+
+    let mut rng = StdRng::from_seed(seed);
 
     problems.shuffle(&mut rng);
 
