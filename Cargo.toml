@@ -9,3 +9,4 @@ ratatui = "0.28.1"
 tui-input = "0.10.1"
 uuid = { version = "1.2", features = ["v4"] }
 chrono = "0.4"
+rand = "0.8.5"
