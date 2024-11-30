@@ -203,7 +203,12 @@ impl<'a> App<'a> {
         } else {
             false
         };
-        self.show_error_popup = !number_valid || !name_valid || !category_valid;
+
+        if !number_valid || !name_valid || !category_valid {
+            self.show_error_popup = !number_valid || !name_valid || !category_valid;
+            self.error_reason = ErrorReason::InsertionError;
+            return;
+        }
 
         let lc_number = self
             .lc_number
