@@ -14,6 +14,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     let db_connection = get_connection(db_path).unwrap();
-    let rusty_lcurve_tui = App::start_ui(db_connection);
+    let _rusty_lcurve_tui = App::start_ui(db_connection);
     Ok(())
 }
