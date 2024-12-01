@@ -157,6 +157,7 @@ fn draw_editor_table(frame: &mut Frame, app: &mut App, area: Rect) {
             ])
         })
         .collect();
+    let bar = " █ ";
 
     let widths = [
         Constraint::Length(10),
@@ -174,9 +175,14 @@ fn draw_editor_table(frame: &mut Frame, app: &mut App, area: Rect) {
                 .title("Leetcode Problems"),
         )
         .highlight_style(Style::default().fg(Color::Green))
-        .highlight_symbol(">");
+        .highlight_symbol(Text::from(vec![
+            "".into(),
+            bar.into(),
+            bar.into(),
+            "".into(),
+        ]));
 
-    frame.render_widget(table, area);
+    frame.render_stateful_widget(table, area, &mut app.editor_state);
 }
 
 fn draw_scrollbar(frame: &mut Frame, app: &mut App, area: Rect) {
