@@ -5,7 +5,7 @@ use sha2::{Digest, Sha256};
 use std::{collections::HashSet, error::Error};
 
 pub fn format_date(date: DateTime<Utc>) -> String {
-    date.format("%Y-%m-%d %H:%M:%S").to_string()
+    date.format("%Y-%m-%d").to_string()
 }
 
 pub fn get_todays_problems(
