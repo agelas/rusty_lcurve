@@ -1,5 +1,5 @@
 use crate::{
-    db::{db::get_all_problems, models::LCProblem},
+    db::models::LCProblem,
     tui::tui::{App, AppView, ErrorReason, OverviewEditor},
     utils::{format_date, get_todays_problems},
 };
@@ -9,7 +9,7 @@ use ratatui::{
     text::{self, Span, Text},
     widgets::{
         Block, Borders, Cell, Clear, List, ListItem, Paragraph, Row, Scrollbar,
-        ScrollbarOrientation, ScrollbarState, Table, TableState, Tabs, Wrap,
+        ScrollbarOrientation, Table, Tabs, Wrap,
     },
     Frame,
 };
