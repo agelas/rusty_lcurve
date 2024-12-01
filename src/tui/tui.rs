@@ -1,5 +1,8 @@
 use crate::{
-    db::db::{insert_problem, problem_exists},
+    db::{
+        db::{get_all_problems, insert_problem, problem_exists},
+        models::LCProblem,
+    },
     tui::{
         stateful_list::StatefulList,
         tabs::TabsState,
@@ -15,6 +18,7 @@ use ratatui::{
         terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     },
     prelude::Backend,
+    widgets::{ScrollbarState, TableState},
     Terminal,
 };
 use rusqlite::Connection;
@@ -27,10 +31,13 @@ use tui_input::{backend::crossterm::EventHandler, Input};
 
 use super::validation::type_validator;
 
+const ITEM_ROW_HEIGHT: usize = 2;
+
 #[derive(PartialEq)]
 pub enum AppMode {
     Normal,
     Input,
+    Edit,
 }
 
 #[derive(PartialEq)]
@@ -62,6 +69,7 @@ pub struct AppSettings {
 
 pub struct App<'a> {
     pub title: &'a str,
+    pub problems: Vec<LCProblem>,
     pub should_quit: bool,
     pub tabs: TabsState<'a>,
     pub app_settings: AppSettings,
@@ -71,12 +79,21 @@ pub struct App<'a> {
     pub lc_name: Input,
     pub categories: StatefulList<&'a str>,
     pub db_connection: Connection,
+    pub editor_state: TableState,
+    pub editor_scroll_state: ScrollbarState,
 }
 
 impl<'a> App<'a> {
     pub fn new(title: &'a str, db_connection: Connection) -> Self {
+        let problems = match get_all_problems(&db_connection) {
+            Ok(problems) => problems,
+            Err(_) => vec![],
+        };
+        let problems_len = &problems.len();
+
         App {
             title,
+            problems,
             should_quit: false,
             tabs: TabsState::new(vec!["Overview", "Editor"]),
             app_settings: AppSettings {
@@ -90,6 +107,8 @@ impl<'a> App<'a> {
             lc_name: Input::default(),
             categories: StatefulList::with_items(CATEGORIES.to_vec()),
             db_connection,
+            editor_state: TableState::default().with_selected(0),
+            editor_scroll_state: ScrollbarState::new((problems_len - 1) * ITEM_ROW_HEIGHT),
         }
     }
 
@@ -132,7 +151,8 @@ impl<'a> App<'a> {
                             match key.code {
                                 KeyCode::Left | KeyCode::Char('h') => self.on_left(),
                                 KeyCode::Right | KeyCode::Char('l') => self.on_right(),
-                                KeyCode::Char('e') => self.app_settings.mode = AppMode::Input,
+                                KeyCode::Char('i') => self.app_settings.mode = AppMode::Input,
+                                KeyCode::Char('e') => self.app_settings.mode = AppMode::Edit,
                                 KeyCode::Char('q') => self.should_quit = true,
                                 _ => {}
                             }
@@ -154,6 +174,12 @@ impl<'a> App<'a> {
                                 _ => {
                                     self.handle_input(key);
                                 }
+                            }
+                        } else if self.app_settings.mode == AppMode::Edit {
+                            match key.code {
+                                KeyCode::Up => self.previous_row(),
+                                KeyCode::Down => self.next_row(),
+                                _ => {}
                             }
                         }
                     }
@@ -192,6 +218,40 @@ impl<'a> App<'a> {
     fn on_down(&mut self) {
         if self.app_settings.editor == OverviewEditor::Type {
             self.categories.next();
+        }
+    }
+
+    pub fn next_row(&mut self) {
+        if self.tabs.index == 1 {
+            let i = match self.editor_state.selected() {
+                Some(i) => {
+                    if i >= self.problems.len() - 1 {
+                        0
+                    } else {
+                        i + 1
+                    }
+                }
+                None => 0,
+            };
+            self.editor_state.select(Some(i));
+            self.editor_scroll_state = self.editor_scroll_state.position(i * ITEM_ROW_HEIGHT);
+        }
+    }
+
+    pub fn previous_row(&mut self) {
+        if self.tabs.index == 1 {
+            let i = match self.editor_state.selected() {
+                Some(i) => {
+                    if i == 0 {
+                        self.problems.len() - 1
+                    } else {
+                        i - 1
+                    }
+                }
+                None => 0,
+            };
+            self.editor_state.select(Some(i));
+            self.editor_scroll_state = self.editor_scroll_state.position(i * ITEM_ROW_HEIGHT);
         }
     }
 
