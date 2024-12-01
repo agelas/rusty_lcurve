@@ -1,7 +1,7 @@
 use crate::{
     db::{db::get_all_problems, models::LCProblem},
     tui::tui::{App, AppView, ErrorReason, OverviewEditor},
-    utils::get_todays_problems,
+    utils::{format_date, get_todays_problems},
 };
 use ratatui::{
     layout::{Constraint, Flex, Layout, Position, Rect},
@@ -157,8 +157,8 @@ fn draw_editor_table(frame: &mut Frame, app: &mut App, area: Rect) {
                 Cell::from(problem.lc_number.to_string()),
                 Cell::from(problem.problem_name.as_str()),
                 Cell::from(problem.problem_type.as_str()),
-                Cell::from(problem.start_date.to_string()),
-                Cell::from(problem.last_practiced.to_string()),
+                Cell::from(format_date(problem.start_date)),
+                Cell::from(format_date(problem.last_practiced)),
                 Cell::from(problem.times_practiced.to_string()),
             ])
         })
