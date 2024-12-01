@@ -8,7 +8,8 @@ use ratatui::{
     style::{Color, Modifier, Style, Stylize},
     text::{self, Span, Text},
     widgets::{
-        Block, Borders, Cell, Clear, List, ListItem, Paragraph, Row, Table, TableState, Tabs, Wrap,
+        Block, Borders, Cell, Clear, List, ListItem, Paragraph, Row, Scrollbar,
+        ScrollbarOrientation, ScrollbarState, Table, TableState, Tabs, Wrap,
     },
     Frame,
 };
@@ -117,28 +118,20 @@ fn draw_lists(frame: &mut Frame, app: &mut App, area: Rect) {
     let chunks =
         Layout::horizontal([Constraint::Percentage(30), Constraint::Percentage(70)]).split(area);
 
-    let problems = match get_all_problems(&app.db_connection) {
-        Ok(problems) => problems,
-        Err(_) => vec![],
-    };
-
-    let todays_problems = match get_todays_problems(&problems) {
+    let todays_problems = match get_todays_problems(&app.problems) {
         Ok(todays_problems) => todays_problems,
         Err(_) => vec![],
     };
 
     let todays_problems_list = create_problem_lists("Todays Problems", &todays_problems, true);
-    let problem_list = create_problem_lists("All Problems", &problems, false);
+    let problem_list = create_problem_lists("All Problems", &app.problems, false);
 
     frame.render_widget(todays_problems_list, chunks[0]);
     frame.render_widget(problem_list, chunks[1]);
 }
 
 fn draw_editor_table(frame: &mut Frame, app: &mut App, area: Rect) {
-    let problems = match get_all_problems(&app.db_connection) {
-        Ok(problems) => problems,
-        Err(_) => vec![], // TODO: should toggle the error popup
-    };
+    let problems = app.problems.clone();
 
     let headers = Row::new(vec![
         Cell::from("Number"),
