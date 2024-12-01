@@ -4,7 +4,7 @@ use crate::{
     utils::{format_date, get_todays_problems},
 };
 use ratatui::{
-    layout::{Constraint, Flex, Layout, Position, Rect},
+    layout::{Constraint, Flex, Layout, Margin, Position, Rect},
     style::{Color, Modifier, Style, Stylize},
     text::{self, Span, Text},
     widgets::{
@@ -47,6 +47,7 @@ fn draw_second_tab(frame: &mut Frame, app: &mut App, area: Rect) {
     let chunks = Layout::vertical([Constraint::Length(90)]).split(area);
 
     draw_editor_table(frame, app, chunks[0]);
+    draw_scrollbar(frame, app, chunks[0]);
 }
 
 fn draw_inputs(frame: &mut Frame, app: &mut App, area: Rect) {
@@ -176,6 +177,20 @@ fn draw_editor_table(frame: &mut Frame, app: &mut App, area: Rect) {
         .highlight_symbol(">");
 
     frame.render_widget(table, area);
+}
+
+fn draw_scrollbar(frame: &mut Frame, app: &mut App, area: Rect) {
+    frame.render_stateful_widget(
+        Scrollbar::default()
+            .orientation(ScrollbarOrientation::VerticalRight)
+            .begin_symbol(None)
+            .end_symbol(None),
+        area.inner(Margin {
+            vertical: 1,
+            horizontal: 1,
+        }),
+        &mut app.editor_scroll_state,
+    );
 }
 
 fn create_problem_lists<'a>(title: &'a str, problems: &'a [LCProblem], truncate: bool) -> List<'a> {
