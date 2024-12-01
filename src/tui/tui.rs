@@ -179,6 +179,7 @@ impl<'a> App<'a> {
                             match key.code {
                                 KeyCode::Up => self.previous_row(),
                                 KeyCode::Down => self.next_row(),
+                                KeyCode::Esc => self.app_settings.mode = AppMode::Normal,
                                 _ => {}
                             }
                         }
