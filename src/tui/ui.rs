@@ -7,7 +7,9 @@ use ratatui::{
     layout::{Constraint, Flex, Layout, Position, Rect},
     style::{Color, Modifier, Style, Stylize},
     text::{self, Span, Text},
-    widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Tabs, Wrap},
+    widgets::{
+        Block, Borders, Cell, Clear, List, ListItem, Paragraph, Row, Table, TableState, Tabs, Wrap,
+    },
     Frame,
 };
 
@@ -38,6 +40,12 @@ fn draw_first_tab(frame: &mut Frame, app: &mut App, area: Rect) {
         Layout::vertical([Constraint::Percentage(20), Constraint::Percentage(60)]).split(area);
     draw_inputs(frame, app, chunks[0]);
     draw_lists(frame, app, chunks[1]);
+}
+
+fn draw_second_tab(frame: &mut Frame, app: &mut App, area: Rect) {
+    let chunks = Layout::vertical([Constraint::Length(90)]).split(area);
+
+    draw_editor_table(frame, app, chunks[0]);
 }
 
 fn draw_inputs(frame: &mut Frame, app: &mut App, area: Rect) {
@@ -126,6 +134,57 @@ fn draw_lists(frame: &mut Frame, app: &mut App, area: Rect) {
     frame.render_widget(problem_list, chunks[1]);
 }
 
+fn draw_editor_table(frame: &mut Frame, app: &mut App, area: Rect) {
+    let problems = match get_all_problems(&app.db_connection) {
+        Ok(problems) => problems,
+        Err(_) => vec![], // TODO: should toggle the error popup
+    };
+
+    let headers = Row::new(vec![
+        Cell::from("Number"),
+        Cell::from("Name"),
+        Cell::from("Type"),
+        Cell::from("Start"),
+        Cell::from("Last Practiced"),
+        Cell::from("Times"),
+    ])
+    .style(Style::default().fg(Color::Yellow));
+
+    let rows: Vec<Row> = problems
+        .iter()
+        .map(|problem| {
+            Row::new(vec![
+                Cell::from(problem.lc_number.to_string()),
+                Cell::from(problem.problem_name.as_str()),
+                Cell::from(problem.problem_type.as_str()),
+                Cell::from(problem.start_date.to_string()),
+                Cell::from(problem.last_practiced.to_string()),
+                Cell::from(problem.times_practiced.to_string()),
+            ])
+        })
+        .collect();
+
+    let widths = [
+        Constraint::Length(10),
+        Constraint::Length(20),
+        Constraint::Length(15),
+        Constraint::Length(20),
+        Constraint::Length(20),
+        Constraint::Length(10),
+    ];
+    let table = Table::new(rows, widths)
+        .header(headers)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Leetcode Problems"),
+        )
+        .highlight_style(Style::default().fg(Color::Green))
+        .highlight_symbol(">");
+
+    frame.render_widget(table, area);
+}
+
 fn create_problem_lists<'a>(title: &'a str, problems: &'a [LCProblem], truncate: bool) -> List<'a> {
     let problem_items: Vec<ListItem> = problems
         .iter()
@@ -142,12 +201,6 @@ fn create_problem_lists<'a>(title: &'a str, problems: &'a [LCProblem], truncate:
         .collect();
 
     List::new(problem_items).block(Block::default().borders(Borders::ALL).title(title))
-}
-
-fn draw_second_tab(frame: &mut Frame, _app: &mut App, area: Rect) {
-    let chunks = Layout::vertical([Constraint::Length(15)]).split(area);
-    let placeholder = Paragraph::new("Placeholder for second tab");
-    frame.render_widget(placeholder, chunks[0]);
 }
 
 fn draw_error_popup(frame: &mut Frame, error_reason: &ErrorReason, area: Rect) {
