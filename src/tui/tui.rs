@@ -307,6 +307,10 @@ impl<'a> App<'a> {
                         self.lc_number.reset();
                         self.lc_name.reset();
                         self.categories.state.select(None);
+                        self.problems = match get_all_problems(&self.db_connection) {
+                            Ok(problems) => problems,
+                            Err(_) => vec![],
+                        }
                     }
                 }
                 Err(_err) => {
