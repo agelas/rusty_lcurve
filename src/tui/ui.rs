@@ -6,7 +6,7 @@ use crate::{
 use ratatui::{
     layout::{Constraint, Flex, Layout, Margin, Position, Rect},
     style::{Color, Modifier, Style, Stylize},
-    text::{self, Span, Text},
+    text::{self, Line, Span, Text},
     widgets::{
         Block, Borders, Cell, Clear, List, ListItem, Paragraph, Row, Scrollbar,
         ScrollbarOrientation, Table, Tabs, Wrap,
@@ -124,8 +124,13 @@ fn draw_lists(frame: &mut Frame, app: &mut App, area: Rect) {
         Err(_) => vec![],
     };
 
-    let todays_problems_list = create_problem_lists("Todays Problems", &todays_problems, true);
-    let problem_list = create_problem_lists("All Problems", &app.problems, false);
+    let todays_problems_list = create_problem_lists(
+        "Todays Problems",
+        &todays_problems,
+        true,
+        Some(app.todays_problem_index),
+    );
+    let problem_list = create_problem_lists("All Problems", &app.problems, false, None);
 
     frame.render_widget(todays_problems_list, chunks[0]);
     frame.render_widget(problem_list, chunks[1]);
@@ -199,10 +204,16 @@ fn draw_scrollbar(frame: &mut Frame, app: &mut App, area: Rect) {
     );
 }
 
-fn create_problem_lists<'a>(title: &'a str, problems: &'a [LCProblem], truncate: bool) -> List<'a> {
+fn create_problem_lists<'a>(
+    title: &'a str,
+    problems: &'a [LCProblem],
+    truncate: bool,
+    selected_index: Option<usize>,
+) -> List<'a> {
     let problem_items: Vec<ListItem> = problems
         .iter()
-        .map(|problem| {
+        .enumerate()
+        .map(|(i, problem)| {
             let mut content = format!(
                 "{}: {} ({})",
                 problem.lc_number, problem.problem_name, problem.problem_type
@@ -210,7 +221,17 @@ fn create_problem_lists<'a>(title: &'a str, problems: &'a [LCProblem], truncate:
             if truncate {
                 content.truncate(20);
             }
-            ListItem::new(content)
+
+            let line = if Some(i) == selected_index {
+                Line::from(Span::styled(
+                    content,
+                    Style::default().add_modifier(Modifier::BOLD | Modifier::UNDERLINED),
+                ))
+            } else {
+                Line::from(content)
+            };
+
+            ListItem::new(line)
         })
         .collect();
 

@@ -1,4 +1,5 @@
 use crate::db::models::LCProblem;
+use chrono::Utc;
 use rusqlite::{params, Connection, Result};
 use std::fs;
 
@@ -78,5 +79,13 @@ fn create_table(conn: &Connection) -> Result<()> {
         ",
         [],
     )?;
+    Ok(())
+}
+
+pub fn update_problem_as_completed(conn: &Connection, problem_id: &str) -> Result<()> {
+    let now = Utc::now();
+    conn.execute(
+        "UPDATE problems SET last_practiced = ?1, times_practiced = times_practiced + 1 WHERE id = ?2",
+        params![now.to_string(), problem_id])?;
     Ok(())
 }

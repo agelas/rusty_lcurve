@@ -1,6 +1,6 @@
 use crate::{
     db::{
-        db::{get_all_problems, insert_problem, problem_exists},
+        db::{get_all_problems, insert_problem, problem_exists, update_problem_as_completed},
         models::LCProblem,
     },
     tui::{
@@ -38,6 +38,7 @@ pub enum AppMode {
     Normal,
     Input,
     Edit,
+    Update,
 }
 
 #[derive(PartialEq)]
@@ -81,6 +82,7 @@ pub struct App<'a> {
     pub db_connection: Connection,
     pub editor_state: TableState,
     pub editor_scroll_state: ScrollbarState,
+    pub todays_problem_index: usize, // index of selected problem in Todays Problems (for updates)
 }
 
 impl<'a> App<'a> {
@@ -109,6 +111,7 @@ impl<'a> App<'a> {
             db_connection,
             editor_state: TableState::default().with_selected(0),
             editor_scroll_state: ScrollbarState::new((problems_len - 1) * ITEM_ROW_HEIGHT),
+            todays_problem_index: 0,
         }
     }
 
@@ -153,6 +156,7 @@ impl<'a> App<'a> {
                                 KeyCode::Right | KeyCode::Char('l') => self.on_right(),
                                 KeyCode::Char('i') => self.app_settings.mode = AppMode::Input,
                                 KeyCode::Char('e') => self.app_settings.mode = AppMode::Edit,
+                                KeyCode::Char('u') => self.app_settings.mode = AppMode::Update,
                                 KeyCode::Char('q') => self.should_quit = true,
                                 _ => {}
                             }
@@ -179,6 +183,14 @@ impl<'a> App<'a> {
                             match key.code {
                                 KeyCode::Up => self.previous_row(),
                                 KeyCode::Down => self.next_row(),
+                                KeyCode::Esc => self.app_settings.mode = AppMode::Normal,
+                                _ => {}
+                            }
+                        } else if self.app_settings.mode == AppMode::Update {
+                            match key.code {
+                                KeyCode::Up => self.todays_problems_index_up(),
+                                KeyCode::Down => self.todays_problems_index_down(),
+                                KeyCode::Enter => self.mark_problem_as_complete(),
                                 KeyCode::Esc => self.app_settings.mode = AppMode::Normal,
                                 _ => {}
                             }
@@ -329,6 +341,28 @@ impl<'a> App<'a> {
                 self.lc_name.handle_event(&Event::Key(key));
             }
             _ => {}
+        }
+    }
+
+    fn todays_problems_index_up(&mut self) {
+        if self.todays_problem_index > 0 {
+            self.todays_problem_index -= 1;
+        } else {
+            self.todays_problem_index = 2;
+        }
+    }
+
+    fn todays_problems_index_down(&mut self) {
+        if self.todays_problem_index < 2 {
+            self.todays_problem_index += 1;
+        } else {
+            self.todays_problem_index = 0;
+        }
+    }
+
+    fn mark_problem_as_complete(&mut self) {
+        if let Some(problem) = self.problems.get(self.todays_problem_index) {
+            let _ = update_problem_as_completed(&self.db_connection, &problem.id);
         }
     }
 }
