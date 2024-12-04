@@ -9,6 +9,7 @@ use crate::{
         ui,
         validation::{number_validator, CATEGORIES},
     },
+    utils::get_todays_problems,
 };
 use ratatui::{
     backend::CrosstermBackend,
@@ -361,7 +362,10 @@ impl<'a> App<'a> {
     }
 
     fn mark_problem_as_complete(&mut self) {
-        if let Some(problem) = self.problems.get(self.todays_problem_index) {
+        if let Some(problem) = get_todays_problems(&self.problems)
+            .unwrap()
+            .get(self.todays_problem_index)
+        {
             match update_problem_as_completed(&self.db_connection, &problem.id) {
                 Ok(_) => {
                     self.problems = match get_all_problems(&self.db_connection) {
