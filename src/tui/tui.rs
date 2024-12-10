@@ -94,6 +94,11 @@ impl<'a> App<'a> {
         };
         let problems_len = &problems.len();
 
+        let mut scroll_len = 0;
+        if *problems_len > 0 {
+            scroll_len = (problems_len - 1) * ITEM_ROW_HEIGHT;
+        }
+
         App {
             title,
             problems,
@@ -111,7 +116,7 @@ impl<'a> App<'a> {
             categories: StatefulList::with_items(CATEGORIES.to_vec()),
             db_connection,
             editor_state: TableState::default().with_selected(0),
-            editor_scroll_state: ScrollbarState::new((problems_len - 1) * ITEM_ROW_HEIGHT),
+            editor_scroll_state: ScrollbarState::new(scroll_len),
             todays_problem_index: 0,
         }
     }
