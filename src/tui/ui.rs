@@ -1,7 +1,7 @@
 use crate::{
     db::models::LCProblem,
     tui::tui::{App, AppView, ErrorReason, OverviewEditor},
-    utils::{format_date, get_todays_problems},
+    utils::format_date,
 };
 use ratatui::{
     layout::{Constraint, Flex, Layout, Margin, Position, Rect},
@@ -119,14 +119,9 @@ fn draw_lists(frame: &mut Frame, app: &mut App, area: Rect) {
     let chunks =
         Layout::horizontal([Constraint::Percentage(30), Constraint::Percentage(70)]).split(area);
 
-    let todays_problems = match get_todays_problems(&app.problems) {
-        Ok(todays_problems) => todays_problems,
-        Err(_) => vec![],
-    };
-
     let todays_problems_list = create_problem_lists(
         "Todays Problems",
-        &todays_problems,
+        &app.todays_problems,
         true,
         Some(app.todays_problem_index),
     );

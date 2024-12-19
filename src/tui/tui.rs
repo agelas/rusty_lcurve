@@ -72,6 +72,7 @@ pub struct AppSettings {
 pub struct App<'a> {
     pub title: &'a str,
     pub problems: Vec<LCProblem>,
+    pub todays_problems: Vec<LCProblem>,
     pub should_quit: bool,
     pub tabs: TabsState<'a>,
     pub app_settings: AppSettings,
@@ -99,9 +100,15 @@ impl<'a> App<'a> {
             scroll_len = (problems_len - 1) * ITEM_ROW_HEIGHT;
         }
 
+        let todays_problems = match get_todays_problems(&problems) {
+            Ok(todays_problems) => todays_problems,
+            Err(_) => vec![],
+        };
+
         App {
             title,
             problems,
+            todays_problems,
             should_quit: false,
             tabs: TabsState::new(vec!["Overview", "Editor"]),
             app_settings: AppSettings {
