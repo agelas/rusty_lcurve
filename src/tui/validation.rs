@@ -1,7 +1,7 @@
 use tui_input::Input;
 
 pub const CATEGORIES: [&str; 18] = [
-    "Arrays & Hasing",
+    "Arrays & Hashing",
     "Two Pointers",
     "Sliding Window",
     "Stack",
